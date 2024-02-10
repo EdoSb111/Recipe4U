@@ -1,7 +1,11 @@
 package com.cc.recipe4u.DataClass
 
+import androidx.room.Entity
+import androidx.room.PrimaryKey
+
+@Entity
 data class Recipe(
-    val recipeId: String,
+    @PrimaryKey val recipeId: String,
     val name: String,
     val category: String,
     val description: String,
@@ -10,5 +14,6 @@ data class Recipe(
     val procedure: String,
     val rating: Float,
     val numberOfRatings: Int,
-    val ownerId: String
+    val ownerId: String,
+    val lastUpdated: Long
 )
