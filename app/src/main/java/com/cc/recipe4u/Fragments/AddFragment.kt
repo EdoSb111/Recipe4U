@@ -150,13 +150,7 @@ class AddFragment : Fragment() {
         val procedure = editTextProcedure.text.toString()
 
         // Get the checked ingredients from the RecyclerView
-        val checkedIngredients = mutableListOf<String>()
-        for (i in 0 until recyclerViewIngredients.childCount) {
-            val viewHolder = recyclerViewIngredients.getChildViewHolder(recyclerViewIngredients.getChildAt(i)) as IngredientAdapter.IngredientViewHolder
-            if (viewHolder.isChecked()) {
-                checkedIngredients.add(viewHolder.getIngredient())
-            }
-        }
+        val checkedIngredients = adapter.getCheckedItems().toList()
 
         // Create a Recipe object
         val recipe = Recipe(
@@ -184,7 +178,7 @@ class AddFragment : Fragment() {
         val filteredList = getSampleIngredients().filter {
             it.lowercase().contains(query.lowercase())
         }
-        adapter.updateList(filteredList)
+        adapter.filter.filter(query)
     }
 
     private fun getSampleIngredients(): List<String> {
