@@ -1,23 +1,33 @@
 package com.cc.recipe4u.ViewModels
 
 import android.content.Context
+import androidx.core.net.toUri
 import androidx.lifecycle.LiveData
 import androidx.lifecycle.MediatorLiveData
 import androidx.lifecycle.MutableLiveData
 import androidx.lifecycle.ViewModel
 import com.cc.recipe4u.DB.RecipeDatabase
+import com.cc.recipe4u.Dao.RecipeDao
 import com.cc.recipe4u.DataClass.Recipe
 import com.cc.recipe4u.Models.FirestoreModel
 import com.cc.recipe4u.Objects.RecipeLocalTime
+import kotlinx.coroutines.CoroutineScope
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.launch
 
-class RecipeViewModel(context: Context) : ViewModel() {
-    private val thisContext = context
-    private val recipeDao = RecipeDatabase.db(context).recipeDao()
+class RecipeViewModel() : ViewModel() {
+    private lateinit var context: Context
+    private lateinit var recipeDao: RecipeDao
     private val _allRecipes: MutableLiveData<List<Recipe>> = MutableLiveData()
-    private val allRecipes: LiveData<List<Recipe>> get() = _allRecipes
+    private val allRecipes: LiveData<List<Recipe>> = _allRecipes
 
+    fun setContextAndDB(context: Context) {
+        this.context = context
+        recipeDao = RecipeDatabase.db(context).recipeDao()
+        _allRecipes.postValue(recipeDao.getAll().value)
+    }
     fun getAllRecipes(): LiveData<List<Recipe>> {
-        val localLastUpdated = RecipeLocalTime.getLocalLastUpdated(thisContext)
+        val localLastUpdated = RecipeLocalTime.getLocalLastUpdated(context)
         FirestoreModel.getAllRecipes(localLastUpdated) { recipes ->
             var lastUpdated = 0L
             for (recipe in recipes) {
@@ -26,7 +36,7 @@ class RecipeViewModel(context: Context) : ViewModel() {
                     lastUpdated = recipe.lastUpdated
                 }
             }
-            RecipeLocalTime.setLocalLastUpdated(thisContext, lastUpdated)
+            RecipeLocalTime.setLocalLastUpdated(context, lastUpdated)
 
             // Update the MutableLiveData with the latest data
             _allRecipes.postValue(recipeDao.getAll().value)
@@ -42,9 +52,26 @@ class RecipeViewModel(context: Context) : ViewModel() {
         return recipeDao.getByOwner(ownerId)
     }
 
-    fun createRecipe(recipe: Recipe) {
-        FirestoreModel.createRecipe(recipe) {
-            recipeDao.insert(recipe)
+    fun createRecipe(recipe: Recipe, listener: (Recipe) -> Unit) {
+        val newRecipe = recipe.copy()
+        if (newRecipe.imageUri == "null") {
+            createRecipeWithoutUploadingImage(newRecipe, listener)
+        } else {
+            FirestoreModel.uploadImage(newRecipe.imageUri.toUri(), onSuccess = { imageUri ->
+                newRecipe.imageUri = imageUri
+                createRecipeWithoutUploadingImage(newRecipe, listener)
+            }, onFailure = {
+                // Handle failure
+            })
+        }
+    }
+
+    private fun createRecipeWithoutUploadingImage(recipe: Recipe, listener: (Recipe) -> Unit) {
+        FirestoreModel.createRecipe(recipe){recipeWithId ->
+            CoroutineScope(Dispatchers.IO).launch {
+                recipeDao.insert(recipeWithId)
+                listener(recipeWithId)
+            }
         }
     }
 }

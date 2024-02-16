@@ -106,24 +106,10 @@ class ProfileFragment : Fragment(),
         return view
     }
 
-    override fun onActivityResult(requestCode: Int, resultCode: Int, data: Intent?) {
-        super.onActivityResult(requestCode, resultCode, data)
-        if (requestCode == GalleryHandler.REQUEST_CODE_PICK_IMAGE && resultCode == Activity.RESULT_OK && data != null) {
-            val selectedImageUri: Uri? = data.data
-            selectedImageUri?.let {
-                userViewModel.updateUserPhoto(it)
-            }
-        }
-    }
 
     private fun showEditUsernameDialog() {
         val dialogFragment = EditDisplayNameDialogFragment()
         dialogFragment.show(childFragmentManager, "EditUsernameDialogFragment")
-    }
-
-    private fun openGallery() {
-        val galleryIntent = Intent(Intent.ACTION_PICK, MediaStore.Images.Media.EXTERNAL_CONTENT_URI)
-        pickImageLauncher.launch(galleryIntent)
     }
 
     override fun onDisplayNameUpdated(displayName: String) {

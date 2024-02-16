@@ -9,13 +9,13 @@ import com.cc.recipe4u.DataClass.Recipe
 
 @Dao
 interface RecipeDao {
-    @Query("SELECT * FROM recipe")
+    @Query("SELECT * FROM recipes")
     fun getAll(): LiveData<List<Recipe>>
 
-    @Query("SELECT * FROM recipe WHERE category = :category")
+    @Query("SELECT * FROM recipes WHERE category = :category")
     fun getByCategory(category: String): LiveData<List<Recipe>>
 
-    @Query("SELECT * FROM recipe WHERE ownerId = :ownerId")
+    @Query("SELECT * FROM recipes WHERE ownerId = :ownerId")
     fun getByOwner(ownerId: String): LiveData<List<Recipe>>
 
     @Update

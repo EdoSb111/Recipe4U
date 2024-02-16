@@ -57,5 +57,9 @@ class AuthViewModel : ViewModel() {
     fun signOut() {
         firebaseRepository.signOut()
     }
+
+    fun getUid(): String? {
+        return currentUser.value?.uid
+    }
 }
 
