@@ -24,14 +24,18 @@ class RecipeViewModel() : ViewModel() {
     fun setContextAndDB(context: Context) {
         this.context = context
         recipeDao = RecipeDatabase.db(context).recipeDao()
-        _allRecipes.postValue(recipeDao.getAll().value)
+        recipeDao.getAll().observeForever { recipes ->
+            _allRecipes.postValue(recipes)
+        }
     }
     fun getAllRecipes(): LiveData<List<Recipe>> {
         val localLastUpdated = RecipeLocalTime.getLocalLastUpdated(context)
         FirestoreModel.getAllRecipes(localLastUpdated) { recipes ->
             var lastUpdated = 0L
             for (recipe in recipes) {
-                recipeDao.insert(recipe)
+                CoroutineScope(Dispatchers.IO).launch {
+                    recipeDao.insert(recipe)
+                }
                 if (lastUpdated < recipe.lastUpdated) {
                     lastUpdated = recipe.lastUpdated
                 }
@@ -39,7 +43,7 @@ class RecipeViewModel() : ViewModel() {
             RecipeLocalTime.setLocalLastUpdated(context, lastUpdated)
 
             // Update the MutableLiveData with the latest data
-            _allRecipes.postValue(recipeDao.getAll().value)
+            // _allRecipes.postValue(recipeDao.getAll().value)
         }
         return allRecipes
     }

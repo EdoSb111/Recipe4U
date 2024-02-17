@@ -18,11 +18,15 @@ import androidx.fragment.app.Fragment
 import androidx.fragment.app.viewModels
 import androidx.lifecycle.Observer
 import androidx.activity.result.contract.ActivityResultContracts
+import androidx.recyclerview.widget.LinearLayoutManager
+import androidx.recyclerview.widget.RecyclerView
+import com.cc.recipe4u.Adapters.RecipeAdapter
 import com.cc.recipe4u.DataClass.User
 import com.cc.recipe4u.DialogFragments.EditDisplayNameDialogFragment
 import com.cc.recipe4u.Objects.GlobalVariables
 import com.cc.recipe4u.R
 import com.cc.recipe4u.ViewModels.AuthViewModel
+import com.cc.recipe4u.ViewModels.RecipeViewModel
 import com.cc.recipe4u.ViewModels.UserViewModel
 import com.squareup.picasso.Picasso
 
@@ -36,9 +40,12 @@ class ProfileFragment : Fragment(),
 
     private var param1: String? = null
     private var param2: String? = null
-    private val authViewModel: AuthViewModel by viewModels()
-    private lateinit var userViewModel: UserViewModel
     private lateinit var sharedPreferences: SharedPreferences
+    private lateinit var recipeRecyclerView: RecyclerView
+
+    private val recipeViewModel: RecipeViewModel by viewModels()
+    private val authViewModel: AuthViewModel by viewModels()
+    private val userViewModel: UserViewModel = UserViewModel(GlobalVariables.currentUser!!.userId)
 
     private val requestPermissionLauncher =
         registerForActivityResult(ActivityResultContracts.RequestPermission()) { isGranted ->
@@ -77,22 +84,17 @@ class ProfileFragment : Fragment(),
             updateUI(user, view)
         }
 
-        authViewModel.currentUser.observe(viewLifecycleOwner, Observer { user ->
-            user?.let {
-                val emailTextView: TextView = view.findViewById(R.id.emailTextView)
-                emailTextView.text = user.email
-                // Initialize or update UserViewModel when the current user is available
-                userViewModel = UserViewModel(user.uid)
-                userViewModel.userLiveData.observe(viewLifecycleOwner, Observer { userData ->
-                    userData?.let {
-                        if (userData != GlobalVariables.currentUser) {
-                            GlobalVariables.currentUser = userData
-                            updateUI(userData)
-                        }
-                    }
-                })
-            }
-        })
+        recipeRecyclerView = view.findViewById(R.id.myRecipesRecyclerView)
+        recipeViewModel.setContextAndDB(requireContext())
+
+        observeUser(view)
+        setClickListeners(view)
+        initRecipeRecyclerView()
+
+        return view
+    }
+
+    private fun setClickListeners(view: View) {
         val displayNameTextView: TextView = view.findViewById(R.id.displayNameTextView)
         val userPhotoImageView: ImageView = view.findViewById(R.id.userPhotoImageView)
 
@@ -102,11 +104,25 @@ class ProfileFragment : Fragment(),
         userPhotoImageView.setOnClickListener {
             GalleryHandler.getPhotoUriFromGallery(requireActivity(), pickImageLauncher, requestPermissionLauncher)
         }
-
-        return view
     }
+    private fun observeUser(view: View) {
+        val emailTextView: TextView? = view.findViewById(R.id.emailTextView)
 
+        userViewModel.userLiveData.observe(viewLifecycleOwner) { userData ->
+            userData?.let {
+                if (userData != GlobalVariables.currentUser) {
+                    GlobalVariables.currentUser = userData
+                    updateUI(userData)
+                }
+            }
+        }
 
+        authViewModel.currentUser.observe(viewLifecycleOwner) { user ->
+            user?.let {
+                emailTextView?.text = user.email
+            }
+        }
+    }
     private fun showEditUsernameDialog() {
         val dialogFragment = EditDisplayNameDialogFragment()
         dialogFragment.show(childFragmentManager, "EditUsernameDialogFragment")
@@ -119,30 +135,39 @@ class ProfileFragment : Fragment(),
 
     private fun updateUI(userData: User, thisView: View? = view) {
         val displayNameTextView: TextView? = thisView?.findViewById(R.id.displayNameTextView)
-        val emailTextView: TextView? = thisView?.findViewById(R.id.emailTextView)
         val userPhotoImageView: ImageView? = thisView?.findViewById(R.id.userPhotoImageView)
 
         displayNameTextView?.text = userData.name
-        emailTextView?.text = authViewModel.currentUser.value?.email
 
         // Load user photo using Picasso if available
-        userData.photoUrl?.takeIf { it.isNotEmpty() }?.let { url ->
+        userData.photoUrl.takeIf { it.isNotEmpty() }?.let { url ->
             Picasso.get()
                 .load(url)
-                .placeholder(R.drawable.login_image) // Placeholder image while loading
-                .error(R.drawable.login_image) // Error image if loading fails
-                .into(userPhotoImageView)
+                .placeholder(R.drawable.progress_animation)
+                .error(R.drawable.baseline_add_photo_alternate_24) // Error image if loading fails
+                .into(userPhotoImageView, object: com.squareup.picasso.Callback {
+                    override fun onSuccess() {
+                        userPhotoImageView?.scaleType = ImageView.ScaleType.CENTER_CROP
+                    }
+
+                    override fun onError(e: Exception?) {
+                        // Set your visibility to VISIBLE
+                    }
+                })
+        } ?: run {
+            // Load default placeholder image if user photo is not available
+            userPhotoImageView?.setImageResource(R.drawable.baseline_add_photo_alternate_24)
         }
     }
 
-    companion object {
-        @JvmStatic
-        fun newInstance(param1: String, param2: String) =
-            ProfileFragment().apply {
-                arguments = Bundle().apply {
-                    putString(ARG_PARAM1, param1)
-                    putString(ARG_PARAM2, param2)
-                }
+    private fun initRecipeRecyclerView() {
+        recipeViewModel.getAllRecipes().observe(viewLifecycleOwner) { recipes ->
+            if (recipes.isNotEmpty()) {
+                val filteredRecipes = recipes.filter { it.ownerId == GlobalVariables.currentUser?.userId }
+                val adapter = RecipeAdapter(filteredRecipes)
+                recipeRecyclerView.layoutManager = LinearLayoutManager(requireContext())
+                recipeRecyclerView.adapter = adapter
             }
+        }
     }
 }

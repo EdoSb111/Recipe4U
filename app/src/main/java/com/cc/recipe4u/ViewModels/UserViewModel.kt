@@ -68,13 +68,15 @@ class UserViewModel(private val userId: String) : ViewModel() {
         )
     }
 
-    fun updateUserRecipeIds(newRecipeIds: List<String>) {
+    fun updateUserRecipeIds(newRecipeIds: List<String>, onSuccess: () -> Unit, onFailure: () -> Unit) {
         userRepository.updateUserRecipeIds(userId, newRecipeIds,
             onSuccess = {
                 // After a successful update, fetch the user again to reflect changes
                 fetchUser()
+                onSuccess()
             },
             onFailure = {
+                onFailure()
                 // Handle failure
             }
         )

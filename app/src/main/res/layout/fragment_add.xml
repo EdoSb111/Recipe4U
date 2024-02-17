@@ -45,8 +45,7 @@
             android:layout_width="match_parent"
             android:layout_height="50dp"
             android:layout_marginTop="16dp"
-            android:background="@drawable/border_background"
-            android:entries="@array/category_options">
+            android:background="@drawable/border_background">
         </Spinner>
 
         <!-- Description -->

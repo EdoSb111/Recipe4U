@@ -3,6 +3,7 @@ package com.cc.recipe4u.Dao
 import androidx.lifecycle.LiveData
 import androidx.room.Dao
 import androidx.room.Insert
+import androidx.room.OnConflictStrategy
 import androidx.room.Query
 import androidx.room.Update
 import com.cc.recipe4u.DataClass.Recipe
@@ -21,6 +22,6 @@ interface RecipeDao {
     @Update
     fun update(recipe: Recipe)
 
-    @Insert
+    @Insert(onConflict = OnConflictStrategy.REPLACE)
     fun insert(recipe: Recipe)
 }

@@ -2,15 +2,14 @@ package com.cc.recipe4u.Fragments
 
 import GalleryHandler
 import android.app.Activity
-import android.content.Intent
 import android.net.Uri
 import android.os.Bundle
-import android.provider.MediaStore
 import android.text.Editable
 import android.text.TextWatcher
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
+import android.widget.ArrayAdapter
 import android.widget.Button
 import android.widget.EditText
 import android.widget.ImageView
@@ -18,16 +17,17 @@ import android.widget.Spinner
 import androidx.activity.result.contract.ActivityResultContracts
 import androidx.fragment.app.Fragment
 import androidx.fragment.app.viewModels
+import androidx.navigation.NavController
+import androidx.navigation.fragment.findNavController
 import androidx.recyclerview.widget.LinearLayoutManager
 import androidx.recyclerview.widget.RecyclerView
 import com.cc.recipe4u.Adapters.IngredientAdapter
 import com.cc.recipe4u.DataClass.Recipe
 import com.cc.recipe4u.Objects.GlobalVariables
+import com.cc.recipe4u.Objects.localDataRepository
 import com.cc.recipe4u.R
-import com.cc.recipe4u.ViewModels.AuthViewModel
 import com.cc.recipe4u.ViewModels.RecipeViewModel
 import com.cc.recipe4u.ViewModels.UserViewModel
-import com.google.android.gms.common.api.internal.LifecycleActivity
 import com.google.android.material.textfield.TextInputEditText
 
 private const val ARG_PARAM1 = "param1"
@@ -50,7 +50,8 @@ class AddFragment : Fragment() {
     private lateinit var buttonCancel: Button
     private lateinit var editTextFilter: TextInputEditText
     private lateinit var recyclerViewIngredients: RecyclerView
-    private lateinit var adapter: IngredientAdapter
+    private lateinit var ingredientAdapter: IngredientAdapter
+    private lateinit var navController: NavController
 
     private var imageUri: Uri? = null
     private val recipeViewModel: RecipeViewModel by viewModels()
@@ -91,6 +92,7 @@ class AddFragment : Fragment() {
         val view = inflater.inflate(R.layout.fragment_add, container, false)
 
         recipeViewModel.setContextAndDB(requireContext())
+        navController = findNavController()
 
         // Initialize views
         recipeNameEditText = view.findViewById(R.id.editTextRecipeName)
@@ -101,28 +103,54 @@ class AddFragment : Fragment() {
         buttonSave = view.findViewById(R.id.buttonSave)
         buttonCancel = view.findViewById(R.id.buttonCancel)
 
+        initSpinnerCategory()
+        initImageView()
+        initButtons()
+        initRecyclerViewIngredients(view)
+
+        return view
+    }
+
+    private fun initSpinnerCategory() {
+        val adapter = ArrayAdapter(
+            requireContext(),
+            R.layout.spinner_item_layout, // Use the custom layout
+            localDataRepository.categories
+        )
+
+        // Specify the layout to use when the list of choices appears
+        adapter.setDropDownViewResource(android.R.layout.simple_spinner_dropdown_item)
+
+        // Apply the adapter to the spinner
+        spinnerCategory.adapter = adapter
+    }
+    private fun initImageView() {
         // Set onClickListener for the image view to pick an image from the gallery
         imageViewRecipe.setOnClickListener {
             GalleryHandler.getPhotoUriFromGallery(requireActivity(), pickImageLauncher, requestPermissionLauncher)
         }
-
+    }
+    private fun initButtons() {
         // Set onClickListener for the save button
         buttonSave.setOnClickListener {
             uploadRecipe()
+
         }
 
         // Set onClickListener for the cancel button
         buttonCancel.setOnClickListener {
             // Handle cancel button click here
+            navController.navigateUp()
         }
-
+    }
+    private fun initRecyclerViewIngredients(view: View) {
         editTextFilter = view.findViewById(R.id.editTextFilter)
         recyclerViewIngredients = view.findViewById(R.id.recyclerViewIngredients)
 
         // Initialize RecyclerView and Adapter
         recyclerViewIngredients.layoutManager = LinearLayoutManager(requireContext())
-        adapter = IngredientAdapter(getSampleIngredients())
-        recyclerViewIngredients.adapter = adapter
+        ingredientAdapter = IngredientAdapter(localDataRepository.ingredients)
+        recyclerViewIngredients.adapter = ingredientAdapter
 
         // Set up text change listener for filtering
         editTextFilter.addTextChangedListener(object : TextWatcher {
@@ -138,10 +166,7 @@ class AddFragment : Fragment() {
                 // Do nothing
             }
         })
-
-        return view
     }
-
     private fun uploadRecipe() {
         // Get the values from the views
         val recipeName = recipeNameEditText.text.toString()
@@ -150,7 +175,7 @@ class AddFragment : Fragment() {
         val procedure = editTextProcedure.text.toString()
 
         // Get the checked ingredients from the RecyclerView
-        val checkedIngredients = adapter.getCheckedItems().toList()
+        val checkedIngredients = ingredientAdapter.getCheckedItems().toList()
 
         // Create a Recipe object
         val recipe = Recipe(
@@ -170,38 +195,16 @@ class AddFragment : Fragment() {
         // Call the createRecipe method in RecipeViewModel
         recipeViewModel.createRecipe(recipe) { recipeWithId ->
             // After a successful creation, update the user's recipeIds
-            userViewModel.updateUserRecipeIds(listOf(recipeWithId.recipeId))
+            userViewModel.updateUserRecipeIds(listOf(recipeWithId.recipeId), onSuccess = {
+                // After a successful update, navigate back to the previous fragment
+                navController.navigateUp()
+            }, onFailure = {
+                // Handle failure
+            })
         }
     }
 
     private fun filterIngredients(query: String) {
-        val filteredList = getSampleIngredients().filter {
-            it.lowercase().contains(query.lowercase())
-        }
-        adapter.filter.filter(query)
-    }
-
-    private fun getSampleIngredients(): List<String> {
-        // Replace this with your actual list of ingredients
-        return listOf("Sugar",
-            "Salt",
-            "Flour",
-            "Eggs",
-            "Milk",
-            "Butter",
-            "Olive Oil",
-            "Baking Powder",
-            "Vanilla Extract",
-            "Cinnamon",
-            "Nutmeg",
-            "Garlic",
-            "Onion",
-            "Tomatoes",
-            "Chicken",
-            "Beef",
-            "Pasta",
-            "Rice",
-            "Lemon",
-            "Honey")
+        ingredientAdapter.filter.filter(query)
     }
 }
