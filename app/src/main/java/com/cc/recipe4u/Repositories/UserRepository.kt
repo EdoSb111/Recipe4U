@@ -118,21 +118,48 @@ class UserRepository {
     }
 
     // Function to update user favorite recipe IDs in Firestore
-    fun updateUserFavoriteRecipeIds(
+    fun updateUserFavoriteRecipeId(
         userId: String,
-        newFavoriteRecipeIds: List<String>,
+        newFavoriteRecipeId: String,
         onSuccess: () -> Unit,
         onFailure: () -> Unit
     ) {
+        val fieldUpdate = mapOf(
+            "favoriteRecipeIds" to FieldValue.arrayUnion(newFavoriteRecipeId)
+        )
+
         db.collection("users")
             .document(userId)
-            .update("favoriteRecipeIds", newFavoriteRecipeIds)
+            .update(fieldUpdate)
             .addOnSuccessListener {
                 onSuccess()
             }
             .addOnFailureListener { exception ->
                 // Handle failure
                 Log.d("updateUserFavoriteRecipeIds", "failed: ${exception.message}")
+                onFailure()
+            }
+    }
+
+    fun removeUserFavoriteRecipeId(
+        userId: String,
+        recipeId: String,
+        onSuccess: () -> Unit,
+        onFailure: () -> Unit
+    ) {
+        val fieldUpdate = mapOf(
+            "favoriteRecipeIds" to FieldValue.arrayRemove(recipeId)
+        )
+
+        db.collection("users")
+            .document(userId)
+            .update(fieldUpdate)
+            .addOnSuccessListener {
+                onSuccess()
+            }
+            .addOnFailureListener { exception ->
+                // Handle failure
+                Log.d("removeUserFavoriteRecipeIds", "failed: ${exception.message}")
                 onFailure()
             }
     }

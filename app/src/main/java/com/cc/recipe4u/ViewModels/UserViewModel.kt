@@ -5,6 +5,7 @@ import androidx.lifecycle.LiveData
 import androidx.lifecycle.MutableLiveData
 import androidx.lifecycle.ViewModel
 import com.cc.recipe4u.DataClass.User
+import com.cc.recipe4u.Objects.GlobalVariables
 import com.cc.recipe4u.Repositories.UserRepository
 import java.util.*
 
@@ -25,6 +26,7 @@ class UserViewModel(private val userId: String) : ViewModel() {
         userRepository.fetchUser(userId,
             onSuccess = { user ->
                 _userLiveData.postValue(user)
+                GlobalVariables.currentUser = user
             },
             onFailure = {
                 // Handle failure
@@ -82,8 +84,20 @@ class UserViewModel(private val userId: String) : ViewModel() {
         )
     }
 
-    fun updateUserFavoriteRecipeIds(newFavoriteRecipeIds: List<String>) {
-        userRepository.updateUserFavoriteRecipeIds(userId, newFavoriteRecipeIds,
+    fun updateUserFavoriteRecipeId(newFavoriteRecipeIds: String) {
+        userRepository.updateUserFavoriteRecipeId(userId, newFavoriteRecipeIds,
+            onSuccess = {
+                // After a successful update, fetch the user again to reflect changes
+                fetchUser()
+            },
+            onFailure = {
+                // Handle failure
+            }
+        )
+    }
+
+    fun removeUserFavoriteRecipeId(favoriteRecipeId: String) {
+        userRepository.removeUserFavoriteRecipeId(userId, favoriteRecipeId,
             onSuccess = {
                 // After a successful update, fetch the user again to reflect changes
                 fetchUser()

@@ -67,7 +67,7 @@ class HomeFragment : Fragment() {
                 } else {
                     recipes.filter { it.category == category }
                 }
-                val adapter = RecipeAdapter(filteredRecipes)
+                val adapter = RecipeAdapter(filteredRecipes, this)
                 recipeRecyclerView.layoutManager = LinearLayoutManager(requireContext())
                 recipeRecyclerView.adapter = adapter
             }

@@ -9,7 +9,11 @@
         android:id="@+id/navigation_home"
         android:name="com.cc.recipe4u.Fragments.HomeFragment"
         android:label="Home"
-        tools:layout="@layout/fragment_home" />
+        tools:layout="@layout/fragment_home" >
+        <action
+            android:id="@+id/action_navigation_home_to_viewFragment"
+            app:destination="@id/viewFragment" />
+    </fragment>
 
     <fragment
         android:id="@+id/navigation_add"
@@ -21,7 +25,11 @@
         android:id="@+id/navigation_favorites"
         android:name="com.cc.recipe4u.Fragments.FavoritesFragment"
         android:label="Favorites"
-        tools:layout="@layout/fragment_favorites" />
+        tools:layout="@layout/fragment_favorites" >
+        <action
+            android:id="@+id/action_navigation_favorites_to_viewFragment"
+            app:destination="@id/viewFragment" />
+    </fragment>
 
     <fragment
         android:id="@+id/navigation_profile"
@@ -35,7 +43,12 @@
     <fragment
         android:id="@+id/editFragment"
         android:name="com.cc.recipe4u.Fragments.EditFragment"
-        android:label="fragment_edit"
+        android:label="Edit Recipe"
         tools:layout="@layout/fragment_edit" />
+    <fragment
+        android:id="@+id/viewFragment"
+        android:name="com.cc.recipe4u.Fragments.ViewFragment"
+        android:label="View Recipe"
+        tools:layout="@layout/fragment_view" />
 
 </navigation>

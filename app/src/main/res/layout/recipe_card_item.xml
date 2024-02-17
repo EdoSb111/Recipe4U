@@ -44,12 +44,21 @@
 
     </LinearLayout>
 
-    <Button
-        android:id="@+id/buttonView"
+<!--    <Button-->
+<!--        android:id="@+id/buttonView"-->
+<!--        android:layout_width="wrap_content"-->
+<!--        android:layout_height="wrap_content"-->
+<!--        android:text="View"-->
+<!--        android:textSize="14sp"-->
+<!--        android:textColor="@android:color/black"-->
+<!--        android:backgroundTint="@color/recipeCardButton" />-->
+
+    <CheckBox
+        android:id="@+id/favoriteCheckBox"
+        android:theme="@style/favoriteCheckBoxStyle"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
-        android:text="View"
-        android:textSize="14sp"
-        android:textColor="@android:color/black"
-        android:backgroundTint="@color/recipeCardButton" />
-</LinearLayout>
+        android:button="@drawable/favorite_button"
+         />
+
+    </LinearLayout>
