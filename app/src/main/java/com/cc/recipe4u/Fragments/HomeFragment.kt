@@ -5,10 +5,13 @@ import androidx.fragment.app.Fragment
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
+import android.widget.EditText
+import androidx.core.widget.addTextChangedListener
 import androidx.fragment.app.viewModels
 import androidx.recyclerview.widget.LinearLayoutManager
 import androidx.recyclerview.widget.RecyclerView
 import com.cc.recipe4u.Adapters.RecipeAdapter
+import com.cc.recipe4u.DataClass.Recipe
 import com.cc.recipe4u.Objects.localDataRepository
 import com.cc.recipe4u.R
 import com.cc.recipe4u.ViewModels.RecipeViewModel
@@ -31,7 +34,9 @@ class HomeFragment : Fragment() {
 
     private lateinit var categoryTabLayout: TabLayout
     private lateinit var recipeRecyclerView: RecyclerView
+    private lateinit var searchTextInput: EditText
     private val recipeViewModel: RecipeViewModel by viewModels()
+    private var recipes = listOf<Recipe>()
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
@@ -50,10 +55,13 @@ class HomeFragment : Fragment() {
 
         categoryTabLayout = view.findViewById(R.id.categoryTabLayout)
         recipeRecyclerView = view.findViewById(R.id.recipesRecyclerView)
+        searchTextInput = view.findViewById(R.id.searchTextInputLayout)
+        recipeRecyclerView.layoutManager = LinearLayoutManager(requireContext())
         recipeViewModel.setContextAndDB(requireContext())
 
         initCategoryTabs()
         initRecipeRecyclerView()
+        setSearchRecipes()
 
         return view
     }
@@ -61,17 +69,24 @@ class HomeFragment : Fragment() {
     private fun initRecipeRecyclerView() {
         recipeViewModel.getAllRecipes().observe(viewLifecycleOwner) { recipes ->
             if (recipes.isNotEmpty()) {
-                val category = categoryTabLayout.getTabAt(categoryTabLayout.selectedTabPosition)?.text.toString()
-                val filteredRecipes = if (category == "All") {
-                    recipes
-                } else {
-                    recipes.filter { it.category == category }
-                }
-                val adapter = RecipeAdapter(filteredRecipes, this)
-                recipeRecyclerView.layoutManager = LinearLayoutManager(requireContext())
-                recipeRecyclerView.adapter = adapter
+                this.recipes = recipes
+                updateAdapter()
             }
         }
+    }
+
+    private fun updateAdapter() {
+        val category = categoryTabLayout.getTabAt(categoryTabLayout.selectedTabPosition)?.text.toString()
+        val name = searchTextInput.text.toString()
+        val filteredRecipes = recipes.filter { recipe ->
+            if (category == "All") {
+                recipe.name.contains(name, ignoreCase = true)
+            } else {
+                recipe.name.contains(name, ignoreCase = true) && recipe.category == category
+            }
+        }
+        val adapter = RecipeAdapter(filteredRecipes, this)
+        recipeRecyclerView.adapter = adapter
     }
     private fun initCategoryTabs() {
         categoryTabLayout.addTab(categoryTabLayout.newTab().setText("All"))
@@ -82,7 +97,7 @@ class HomeFragment : Fragment() {
 
         categoryTabLayout.addOnTabSelectedListener(object : TabLayout.OnTabSelectedListener {
             override fun onTabSelected(tab: TabLayout.Tab?) {
-                initRecipeRecyclerView()
+                updateAdapter()
             }
 
             override fun onTabUnselected(tab: TabLayout.Tab?) {
@@ -92,6 +107,12 @@ class HomeFragment : Fragment() {
             override fun onTabReselected(tab: TabLayout.Tab?) {
                 // Do nothing
             }
+        })
+    }
+
+    private fun setSearchRecipes() {
+        searchTextInput.addTextChangedListener(onTextChanged = { _, _, _, _ ->
+            updateAdapter()
         })
     }
 }

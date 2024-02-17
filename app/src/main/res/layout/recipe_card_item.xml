@@ -14,8 +14,9 @@
         android:id="@+id/imageViewRecipe"
         android:layout_width="80dp"
         android:layout_height="80dp"
-        tools:src="@drawable/login_image"
-        app:shapeAppearanceOverlay="@style/RoundedSquare"/>
+        android:scaleType="centerCrop"
+        app:shapeAppearanceOverlay="@style/RoundedSquare"
+        tools:src="@drawable/login_image"/>
 
     <LinearLayout
         android:layout_width="0dp"

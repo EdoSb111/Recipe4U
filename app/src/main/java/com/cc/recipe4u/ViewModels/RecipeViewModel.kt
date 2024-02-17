@@ -41,9 +41,6 @@ class RecipeViewModel() : ViewModel() {
                 }
             }
             RecipeLocalTime.setLocalLastUpdated(context, lastUpdated)
-
-            // Update the MutableLiveData with the latest data
-            // _allRecipes.postValue(recipeDao.getAll().value)
         }
         return allRecipes
     }

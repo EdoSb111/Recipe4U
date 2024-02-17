@@ -16,9 +16,6 @@ class UserViewModel(private val userId: String) : ViewModel() {
     val userLiveData: LiveData<User> get() = _userLiveData
 
     init {
-        // Initialize user document on initialization
-        userRepository.initializeUserDocument(userId)
-        // Fetch user data on initialization
         fetchUser()
     }
 

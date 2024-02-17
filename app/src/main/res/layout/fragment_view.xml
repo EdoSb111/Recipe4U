@@ -17,21 +17,26 @@
 
         <RelativeLayout
             android:layout_width="match_parent"
-            android:layout_height="30dp">
+            android:layout_height="wrap_content"
+            android:minHeight="30dp">
 
             <TextView
                 android:id="@+id/recipeNameTextView"
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
-                tools:text="Recipe Name"
+                android:layout_alignParentStart="true"
+                android:layout_marginStart="0dp"
+                android:layout_toStartOf="@+id/editRecipeButton"
                 android:textSize="24sp"
-                android:textStyle="bold"/>
+                android:textStyle="bold"
+                tools:text="Recipe Name" />
 
             <ImageButton
                 android:id="@+id/editRecipeButton"
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
                 android:layout_alignParentEnd="true"
+                android:layout_marginLeft="8dp"
                 android:background="@android:color/transparent"
                 android:src="@drawable/baseline_edit_24"
                 android:visibility="gone"

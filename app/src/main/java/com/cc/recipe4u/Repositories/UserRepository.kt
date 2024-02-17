@@ -46,9 +46,11 @@ class UserRepository {
             .document(userId)
             .get()
             .addOnSuccessListener { document ->
-                if (document != null) {
-                    val user = document.toObject(User::class.java)
-                    user?.let { onSuccess(it) }
+                if(document != null) {
+                    onSuccess(document.toObject(User::class.java)!!)
+                } else {
+                    initializeUserDocument(userId)
+                    onSuccess(User(userId, "", "", emptyList(), emptyList(), emptyMap()))
                 }
             }
             .addOnFailureListener { exception ->

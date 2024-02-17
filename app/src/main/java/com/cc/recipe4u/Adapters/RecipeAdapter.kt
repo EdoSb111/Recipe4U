@@ -25,6 +25,7 @@ class RecipeAdapter(private var recipes: List<Recipe>,
     RecyclerView.Adapter<RecipeAdapter.RecipeViewHolder>() {
 
     private val userViewModel: UserViewModel = UserViewModel(GlobalVariables.currentUser!!.userId)
+    private var filteredRecipes: List<Recipe> = recipes
 
     class RecipeViewHolder(itemView: View) : RecyclerView.ViewHolder(itemView) {
         val imageViewRecipe: ImageView = itemView.findViewById(R.id.imageViewRecipe)
@@ -77,15 +78,9 @@ class RecipeAdapter(private var recipes: List<Recipe>,
             Picasso.get()
                 .load(recipe.imageUri)
                 .placeholder(R.drawable.progress_animation)
-                .into(holder.imageViewRecipe, object : com.squareup.picasso.Callback {
-                    override fun onSuccess() {
-                        holder.imageViewRecipe.scaleType = ImageView.ScaleType.CENTER_CROP
-                    }
-
-                    override fun onError(e: Exception?) {
-                        // Set your visibility to VISIBLE
-                    }
-                })
+                .into(holder.imageViewRecipe)
+        } else {
+            holder.imageViewRecipe.setImageResource(R.drawable.login_image)
         }
     }
     override fun getItemCount(): Int = recipes.size
